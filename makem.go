@@ -8,6 +8,24 @@ import (
 	"os"
 )
 
+type MakeData struct {
+	all recipe
+	recipes []recipe
+}
+
+func (m *MakeData) Add(r recipe) {
+	m.recipes = append(m.recipes, r)
+	m.all.deps = append(m.all.deps, r.target)
+}
+
+func (m *MakeData) Fprint(w io.Writer) {
+	m.all.target = "all"
+	m.all.Fprint(w)
+	for _, r := range m.recipes {
+		r.Fprint(w)
+	}
+}
+
 type recipe struct {
 	target string
 	deps []string
