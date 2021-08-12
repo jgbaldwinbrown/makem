@@ -1,4 +1,4 @@
-package make_make
+package makem
 
 import (
 	"os/exec"
