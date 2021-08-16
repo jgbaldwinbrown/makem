@@ -73,10 +73,11 @@ func (r *Recipe) AddScripts(ts []string) {
 }
 
 func (r Recipe) Fprint(w io.Writer) {
-	fmt.Fprintf(w, "%s:", r.Targets[0])
+	fmt.Fprintf(w, "%s", r.Targets[0])
 	for _, t := range r.Targets[1:] {
 		fmt.Fprintf(w, " %s", t)
 	}
+	fmt.Fprintf(w, ":")
 	for _, d := range r.Deps {
 		fmt.Fprintf(w, " %s", d)
 	}
