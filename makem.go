@@ -10,6 +10,7 @@ import (
 
 type MakeData struct {
 	All Recipe
+	Preamble string
 	Recipes []Recipe
 }
 
@@ -21,6 +22,7 @@ func (m *MakeData) Add(r Recipe) {
 func (m *MakeData) Fprint(w io.Writer) {
 	m.All.AddTarget("all")
 	m.All.Fprint(w)
+	fmt.Fprint(w, m.Preamble)
 	FprintRecipes(w, m.Recipes)
 }
 
@@ -34,6 +36,14 @@ func (m *MakeData) Exec() (err error) {
 	tmpfile.Close()
 	exec.Command("make", "-f", tmpfile.Name()).Run()
 	return nil
+}
+
+func (m *MakeData) AppendPreamble(s string) {
+	m.Preamble = m.Preamble + s
+}
+
+func (m *MakeData) SetPreamble(s string) {
+	m.Preamble = s
 }
 
 type Recipe struct {
