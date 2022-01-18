@@ -2,7 +2,16 @@
 
 Short for "Make 'em", this small library assists in the generation of makefiles
 for running large numbers of concurrent jobs. It is a lightweight alternative
-to programs such as [snakemake](https://github.com/snakemake/snakemake).
+to programs such as [snakemake](https://github.com/snakemake/snakemake). Its
+advantage is in building parallel pipelines using the Go language, rather than
+attempting complex substitutions using a more traditional make-like tool. The
+tool is very explicit, and can be overly verbose for very small makefiles. It
+excels, however, when dealing with very large files. It is great for pipelines
+that will use hundreds or thousands of inputs and outputs, as recipes can be
+written programmatically rather than one-by-one. Being written in an easy-to-use,
+high-level, general-purpose language allows for arbitrarily complex scripting.
+
+all: 
 
 ## Installation
 
@@ -23,7 +32,7 @@ import (
 ## A simple example
 
 This complete example creates a makefile, then runs it using all available computing cores. If the . The makefile specifies
-that 7 new files, a0, a1, a2, a3, a4, b0, and b1, should be created using "touch".
+that 7 new files, a0, a1, a2, a3, a4, b0, b1, and b2, should be created using "touch" and "cat", with the "b" files depending on the "a" files.
 
 ```go
 package main
@@ -36,6 +45,8 @@ import (
 func main() {
 	makefile := new(makem.MakeData)
 
+	/* Add targets in a for loop to generate multiple similar recipes: */
+
 	for i:=0; i<5; i++ {
 		name := fmt.Sprintf("a%d", i)
 		new_rec := makem.Recipe{}
@@ -44,11 +55,23 @@ func main() {
 		makefile.Add(new_rec)
 	}
 
+	/* Multiple targets and dependencies are possible, as are multiple scripts per recipe: */
+
 	new_rec := makem.Recipe{}
 	new_rec.AddTargets("b0", "b1")
 	new_rec.AddDeps("a0", "a1")
 	new_rec.AddScripts("cat a0 > b0", "cat a1 > b1")
 	makefile.Add(new_rec)
+
+	/* Alternative literal syntax: /*
+
+	makefile.Add(makem.Recipe{
+		Targets: []string{"b2"},
+		Deps: []string{"a2"},
+		Scripts: []string{cat a2 > b2"},
+	})
+
+	/* Run the makefile */
 
 	makefile.Exec(makem.UseAllCores())
 }
@@ -58,7 +81,7 @@ If the makefile were printed using the line `makefile.Fprint(os.Stdout)`, it wou
 produce the following output:
 
 ```make
-all: a0 a1 a2 a3 a4 b0 b1
+all: a0 a1 a2 a3 a4 b0 b1 b2
 
 a0:
 	touch a0
@@ -78,6 +101,8 @@ a4:
 b0 b1: a0 a1
 	cat a0 > b0
 	cat a1 > b1
+b2: a2
+	cat a2 > b2
 
 ```
 
