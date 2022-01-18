@@ -9,7 +9,6 @@ import (
 )
 
 type MakeData struct {
-	All Recipe
 	Preamble string
 	Recipes []Recipe
 }
@@ -22,16 +21,21 @@ type ExecInternal struct {
 
 type ExecOption func(e *ExecInternal)
 
-func (m *MakeData) Add(r Recipe) {
-	m.Recipes = append(m.Recipes, r)
-	m.All.Deps = append(m.All.Deps, r.Targets...)
+func (m *MakeData) Add(rs ...Recipe) {
+	m.Recipes = append(m.Recipes, rs...)
 }
 
 func (m *MakeData) Fprint(w io.Writer) {
-	m.All.AddTarget("all")
-	m.All.Fprint(w)
+	all := Recipe{}
+	all.AddTargets("all")
+
+	for _, recipe := range m.Recipes {
+		all.AddDeps(recipe.Targets...)
+	}
+
+	all.Fprint(w)
 	fmt.Fprint(w, m.Preamble)
-	FprintRecipes(w, m.Recipes)
+	FprintRecipes(w, m.Recipes...)
 }
 
 func UseCores(corenum int) ExecOption {
@@ -87,34 +91,16 @@ type Recipe struct {
 	Scripts []string
 }
 
-func (r *Recipe) AddTarget(t string) {
-	r.Targets = append(r.Targets, t)
+func (r *Recipe) AddTargets(ts ...string) {
+	r.Targets = append(r.Targets, ts...)
 }
 
-func (r *Recipe) AddTargets(ts []string) {
-	for _, t := range ts {
-		r.AddTarget(t)
-	}
+func (r *Recipe) AddDeps(ts ...string) {
+	r.Deps = append(r.Deps, ts...)
 }
 
-func (r *Recipe) AddDep(t string) {
-	r.Deps = append(r.Deps, t)
-}
-
-func (r *Recipe) AddDeps(ts []string) {
-	for _, t := range ts {
-		r.AddDep(t)
-	}
-}
-
-func (r *Recipe) AddScript(t string) {
-	r.Scripts = append(r.Scripts, t)
-}
-
-func (r *Recipe) AddScripts(ts []string) {
-	for _, t := range ts {
-		r.AddScript(t)
-	}
+func (r *Recipe) AddScripts(ts ...string) {
+	r.Scripts = append(r.Scripts, ts...)
 }
 
 func (r Recipe) Fprint(w io.Writer) {
@@ -130,9 +116,10 @@ func (r Recipe) Fprint(w io.Writer) {
 	for _, s := range r.Scripts {
 		fmt.Fprintf(w, "\t%s\n", s)
 	}
+	fmt.Fprintf(w, "\n")
 }
 
-func FprintRecipes(w io.Writer, rs []Recipe) {
+func FprintRecipes(w io.Writer, rs ...Recipe) {
 	for _, r := range rs {
 		r.Fprint(w)
 	}
