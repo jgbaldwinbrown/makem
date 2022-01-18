@@ -200,3 +200,33 @@ type ExecOption func(e *ExecInternal)
 ```
 
 This type is the only argument type for the Exec 
+
+#### UseCores
+
+```go
+func UseCores(corenum int) ExecOption
+```
+
+This function is used as an option when running "MakeData.Exec". It sets Exec
+to use a fixed number of cores (`corenum`) when running. Example:
+
+```go
+m := MakeData{}
+/* ... */
+done := m.Exec(UseCores(8))
+```
+
+#### UseAllCores
+
+```go
+func UseAllCores() ExecOption
+```
+
+This function is used as an option when running "MakeData.Exec". It sets Exec
+to use all available cores (`corenum`) when running. Example:
+
+```go
+m := MakeData{}
+/* ... */
+done := m.Exec(UseAllCores())
+```
