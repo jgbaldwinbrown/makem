@@ -22,7 +22,7 @@ import (
 
 ## A simple example
 
-This complete example creates a makefile, then runs it. The makefile specifies
+This complete example creates a makefile, then runs it using all available computing cores. If the . The makefile specifies
 that 7 new files, a0, a1, a2, a3, a4, b0, and b1, should be created using "touch".
 
 ```go
@@ -30,8 +30,7 @@ package main
 
 import (
 	"fmt"
-	"local/jgbaldwinbrown/makem"
-	"os"
+	"github.com/jgbaldwinbrown/makem"
 )
 
 func main() {
@@ -40,18 +39,46 @@ func main() {
 	for i:=0; i<5; i++ {
 		name := fmt.Sprintf("a%d", i)
 		new_rec := makem.Recipe{}
-		new_rec.AddTarget(name)
+		new_rec.AddTargets(name)
 		new_rec.AddScripts(fmt.Sprintf("touch %s", name))
 		makefile.Add(new_rec)
 	}
 
 	new_rec := makem.Recipe{}
 	new_rec.AddTargets("b0", "b1")
-	new_rec.AddScripts("touch b0", "touch b1")
+	new_rec.AddDeps("a0", "a1")
+	new_rec.AddScripts("cat a0 > b0", "cat a1 > b1")
 	makefile.Add(new_rec)
 
 	makefile.Exec(makem.UseAllCores())
 }
+```
+
+If the makefile were printed using the line `makefile.Fprint(os.Stdout)`, it would
+produce the following output:
+
+```make
+all: a0 a1 a2 a3 a4 b0 b1
+
+a0:
+	touch a0
+
+a1:
+	touch a1
+
+a2:
+	touch a2
+
+a3:
+	touch a3
+
+a4:
+	touch a4
+
+b0 b1: a0 a1
+	cat a0 > b0
+	cat a1 > b1
+
 ```
 
 ## Documentation
