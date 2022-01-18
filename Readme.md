@@ -63,7 +63,7 @@ func main() {
 	new_rec.AddScripts("cat a0 > b0", "cat a1 > b1")
 	makefile.Add(new_rec)
 
-	/* Alternative literal syntax: /*
+	/* Alternative literal syntax: */
 
 	makefile.Add(makem.Recipe{
 		Targets: []string{"b2"},
