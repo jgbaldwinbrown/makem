@@ -41,16 +41,13 @@ func main() {
 		name := fmt.Sprintf("a%d", i)
 		new_rec := makem.Recipe{}
 		new_rec.AddTarget(name)
-		new_rec.Scripts = append(new_rec.Scripts, fmt.Sprintf("touch %s", name))
+		new_rec.AddScripts(fmt.Sprintf("touch %s", name))
 		makefile.Add(new_rec)
 	}
 
 	new_rec := makem.Recipe{}
-	new_rec.AddTargets([]string{"b0", "b1"})
-	new_rec.AddScripts([]string{
-		"touch b0",
-		"touch b1",
-	})
+	new_rec.AddTargets("b0", "b1")
+	new_rec.AddScripts("touch b0", "touch b1")
 	makefile.Add(new_rec)
 
 	makefile.Exec(makem.UseAllCores())
@@ -73,13 +70,21 @@ This is the main type in the library. It holds all of the recipes in the
 makefile, plus the special "All" recipe which depends on all other recipes,
 plus any preamble added by the user.
 
+#### MakeData.Add
+
+```go
+func (m *MakeData) Add(rs ...Recipe)
+```
+
+This function adds a set of recipes to the makefile.
+
 #### MakeData.Fprint
 
 ```go
 func (m *MakeData) Fprint(w io.Writer)
 ```
 
-This method allows printing of the full makefile to the specified io.Writer.
+This method prints the full makefile to the specified io.Writer.
 
 #### MakeData.Exec
 
@@ -134,9 +139,45 @@ myrecipe := Recipe {
 }
 ```
 
-#### Recipe.AddTarget
+#### Recipe.AddTargets
 
+```go
+func (r *Recipe) AddTargets(ts ...string)
+```
 
+Add the specified targets to the recipe.
+
+#### Recipe.AddDeps
+
+```go
+func (r *Recipe) AddDeps(ts ...string)
+```
+
+Add the specified dependencies to the recipe.
+
+#### Recipe.AddScripts
+
+```go
+func (r *Recipe) AddScripts(ts ...string)
+```
+
+Add the specified scripts to the recipe.
+
+#### Recipe.Fprint
+
+```go
+func (r Recipe) Fprint(w io.Writer)
+```
+
+Print the recipe to a specified `io.Writer`.
+
+### FprintRecipes
+
+```go
+FprintRecipes(w io.Writer, rs ...Recipe)
+```
+
+Print all specified recipes to an `io.Writer`.
 
 ### ExecInternal
 

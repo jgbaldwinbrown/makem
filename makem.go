@@ -116,6 +116,7 @@ func (r Recipe) Fprint(w io.Writer) {
 	for _, s := range r.Scripts {
 		fmt.Fprintf(w, "\t%s\n", s)
 	}
+	fmt.Fprintf(w, "\n")
 }
 
 func FprintRecipes(w io.Writer, rs ...Recipe) {
