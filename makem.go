@@ -14,6 +14,14 @@ type MakeData struct {
 	Recipes []Recipe
 }
 
+type ExecInternal struct {
+	Parallel bool
+	Cores int
+	AllCores bool
+}
+
+type ExecOption func(e *ExecInternal)
+
 func (m *MakeData) Add(r Recipe) {
 	m.Recipes = append(m.Recipes, r)
 	m.All.Deps = append(m.All.Deps, r.Targets...)
@@ -26,7 +34,24 @@ func (m *MakeData) Fprint(w io.Writer) {
 	FprintRecipes(w, m.Recipes)
 }
 
-func (m *MakeData) Exec() (err error) {
+func UseCores(corenum int) ExecOption {
+	return func(e *ExecInternal) {
+		e.Parallel = true
+		e.Cores = corenum
+	}
+}
+
+func UseAllCores() ExecOption {
+	return func(e *ExecInternal) {
+		e.AllCores = true
+	}
+}
+
+func (m *MakeData) Exec(options ...ExecOption) (err error) {
+	settings := ExecInternal{}
+	for _, option := range options {
+		option(&settings)
+	}
 	tmpfile, err := ioutil.TempFile("", "Makefile")
 	if err != nil {
 		return err
@@ -34,7 +59,17 @@ func (m *MakeData) Exec() (err error) {
 	defer os.Remove(tmpfile.Name())
 	m.Fprint(tmpfile)
 	tmpfile.Close()
-	exec.Command("make", "-f", tmpfile.Name()).Run()
+
+	jobs_string := ""
+	if settings.Parallel {
+		jobs_string = fmt.Sprintf("-j %v", settings.Cores)
+	}
+	if settings.AllCores {
+		jobs_string = fmt.Sprintf("-j")
+	}
+
+	exec.Command("make", jobs_string, "-f", tmpfile.Name()).Run()
+
 	return nil
 }
 
