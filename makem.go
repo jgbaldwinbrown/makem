@@ -42,12 +42,14 @@ func UseCores(corenum int) ExecOption {
 	return func(e *ExecInternal) {
 		e.Parallel = true
 		e.Cores = corenum
+		e.AllCores = false
 	}
 }
 
 func UseAllCores() ExecOption {
 	return func(e *ExecInternal) {
 		e.AllCores = true
+		e.Parallel = false
 	}
 }
 
@@ -65,14 +67,19 @@ func (m *MakeData) Exec(options ...ExecOption) (err error) {
 	tmpfile.Close()
 
 	jobs_string := ""
+	jobs_count := ""
 	if settings.Parallel {
-		jobs_string = fmt.Sprintf("-j %v", settings.Cores)
+		jobs_string = fmt.Sprintf("-j")
+		jobs_count = fmt.Sprintf("%v", settings.Cores)
 	}
 	if settings.AllCores {
 		jobs_string = fmt.Sprintf("-j")
 	}
 
 	command := exec.Command("make", jobs_string, "-f", tmpfile.Name())
+	if settings.Parallel {
+		command = exec.Command("make", jobs_string, jobs_count, "-f", tmpfile.Name())
+	}
 	command.Stdout = os.Stdout
 	command.Stderr = os.Stderr
 	command.Stdin = os.Stdin
