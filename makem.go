@@ -72,7 +72,11 @@ func (m *MakeData) Exec(options ...ExecOption) (err error) {
 		jobs_string = fmt.Sprintf("-j")
 	}
 
-	exec.Command("make", jobs_string, "-f", tmpfile.Name()).Run()
+	command := exec.Command("make", jobs_string, "-f", tmpfile.Name())
+	command.Stdout = os.Stdout
+	command.Stderr = os.Stderr
+	command.Stdin = os.Stdin
+	command.Run()
 
 	return nil
 }
