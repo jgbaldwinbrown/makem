@@ -17,6 +17,7 @@ type ExecInternal struct {
 	Parallel bool
 	Cores int
 	AllCores bool
+	KeepGoing bool
 }
 
 type ExecOption func(e *ExecInternal)
@@ -53,6 +54,12 @@ func UseAllCores() ExecOption {
 	}
 }
 
+func KeepGoing() ExecOption {
+	return func(e *ExecInternal) {
+		e.KeepGoing = true
+	}
+}
+
 func (m *MakeData) Exec(options ...ExecOption) (err error) {
 	settings := ExecInternal{}
 	for _, option := range options {
@@ -66,20 +73,26 @@ func (m *MakeData) Exec(options ...ExecOption) (err error) {
 	m.Fprint(tmpfile)
 	tmpfile.Close()
 
-	jobs_string := ""
-	jobs_count := ""
+	var option_list []string
 	if settings.Parallel {
-		jobs_string = fmt.Sprintf("-j")
-		jobs_count = fmt.Sprintf("%v", settings.Cores)
-	}
-	if settings.AllCores {
-		jobs_string = fmt.Sprintf("-j")
+		jobs_string := fmt.Sprintf("-j")
+		jobs_count := fmt.Sprintf("%v", settings.Cores)
+		option_list = append(option_list, jobs_string)
+		option_list = append(option_list, jobs_count)
+	} else if settings.AllCores {
+		jobs_string := fmt.Sprintf("-j")
+		option_list = append(option_list, jobs_string)
 	}
 
-	command := exec.Command("make", jobs_string, "-f", tmpfile.Name())
-	if settings.Parallel {
-		command = exec.Command("make", jobs_string, jobs_count, "-f", tmpfile.Name())
+	if settings.KeepGoing {
+		keep_going := fmt.Sprintf("-k")
+		option_list = append(option_list, keep_going)
 	}
+
+	option_list = append(option_list, "-f", tmpfile.Name())
+
+	command := exec.Command("make", option_list...)
+
 	command.Stdout = os.Stdout
 	command.Stderr = os.Stderr
 	command.Stdin = os.Stdin
